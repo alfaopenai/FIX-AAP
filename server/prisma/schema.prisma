@@ -1,0 +1,78 @@
+// Prisma schema for Fix backend (initial draft)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  userType  String   // 'client' | 'service_provider'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages  Message[] @relation("UserMessages")
+}
+
+model Conversation {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  // optional linkage to issue or job in the future
+
+  messages    Message[]
+}
+
+model Message {
+  id             String        @id @default(cuid())
+  conversation   Conversation  @relation(fields: [conversationId], references: [id])
+  conversationId String
+  sender         User?         @relation("UserMessages", fields: [senderId], references: [id])
+  senderId       String?
+  content        String
+  createdAt      DateTime      @default(now())
+}
+
+model Issue {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String
+  urgency     String
+  photos      String[]
+  location    String?
+  createdAt   DateTime @default(now())
+}
+
+model Store {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  rating      Decimal? @db.Decimal(3,2)
+  image_url   String?
+  categories  String[]
+  createdAt   DateTime @default(now())
+  products    Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  store       Store    @relation(fields: [storeId], references: [id])
+  storeId     String
+  name        String
+  description String?
+  price       Int
+  rating      Decimal? @db.Decimal(3,2)
+  image_url   String?
+  brand       String?
+  original_price Int?
+  createdAt   DateTime @default(now())
+}
+
+
